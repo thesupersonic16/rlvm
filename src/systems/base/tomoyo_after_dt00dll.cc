@@ -26,14 +26,45 @@
 
 #include "systems/base/tomoyo_after_dt00dll.h"
 
+#include <dlfcn.h>
 #include <iostream>
 
-TomoyoAfterDT00DLL::TomoyoAfterDT00DLL() {
-  std::cerr << "WARNING: Tomoyo After: Dungeons & Takafumis is implemented in"
-            << " a DLL and hasn't been reverse engineered yet." << std::endl;
+#include "systems/base/system.h"
+#include "libreallive/gameexe.h"
+#include "machine/rlmachine.h"
+#include "machine/memory.h"
+
+static void* dt00;
+TomoyoAfterDT00DLL::TomoyoAfterDT00DLL(RLMachine& machine) {
+  auto gameexe = machine.system().gameexe();
+  boost::filesystem::path path(gameexe("__GAMEPATH"));
+
+  // Load Dungeons & Takafumis library
+  dt00 = dlopen((path / "libdt00.so").string().c_str(), RTLD_LAZY);
+  if (dt00) {
+    *reinterpret_cast<int**>(dlsym(dt00, "intA")) =
+        machine.memory().local().intA;
+    *reinterpret_cast<int**>(dlsym(dt00, "intB")) =
+        machine.memory().local().intB;
+    *reinterpret_cast<int**>(dlsym(dt00, "intC")) =
+        machine.memory().local().intC;
+    *reinterpret_cast<int**>(dlsym(dt00, "intD")) =
+        machine.memory().local().intD;
+    *reinterpret_cast<int**>(dlsym(dt00, "intE")) =
+        machine.memory().local().intE;
+    *reinterpret_cast<int**>(dlsym(dt00, "intF")) =
+        machine.memory().local().intF;
+    ((int (*)(int, int))dlsym(dt00, "reallive_dll_func_load"))(0, 0);
+  } else {
+    std::cerr << "WARNING: Tomoyo After: Dungeons & Takafumis is implemented in"
+              << " a DLL and hasn't been reverse engineered yet." << std::endl;
+  }
 }
 
-TomoyoAfterDT00DLL::~TomoyoAfterDT00DLL() {}
+TomoyoAfterDT00DLL::~TomoyoAfterDT00DLL() {
+  if (dt00)
+    dlclose(dt00);
+}
 
 int TomoyoAfterDT00DLL::CallDLL(RLMachine& machine,
                                 int func,
@@ -41,9 +72,12 @@ int TomoyoAfterDT00DLL::CallDLL(RLMachine& machine,
                                 int arg2,
                                 int arg3,
                                 int arg4) {
-  // Perform no spew.
-  return 0;
-}
+    if (dt00) {
+      ((int (*)(int, int, int, int, int))dlsym(dt00, "reallive_dll_func_call"))(
+        func, arg1, arg2, arg3, arg4);
+    }
+    return 1;
+  }
 
 const std::string& TomoyoAfterDT00DLL::GetDLLName() const {
   static std::string n("DT00");

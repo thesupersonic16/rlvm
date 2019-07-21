@@ -78,7 +78,7 @@ RealLiveDLL* RealLiveDLL::BuildDLLNamed(RLMachine& machine,
   } else if (name == "PT00") {
     return new LittleBustersPT00DLL;
   } else if (name == "DT00") {
-    return new TomoyoAfterDT00DLL;
+    return new TomoyoAfterDT00DLL(machine);
   } else if (boost::starts_with(name, "RealLiveSteam")) {
     return new IgnoredDLL(name);
   } else {

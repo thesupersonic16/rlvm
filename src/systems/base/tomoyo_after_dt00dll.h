@@ -35,7 +35,7 @@
 // RPG minigame DLL hasn't been reverse engineered and then ignore calls.
 class TomoyoAfterDT00DLL : public RealLiveDLL {
  public:
-  TomoyoAfterDT00DLL();
+  TomoyoAfterDT00DLL(RLMachine& machine);
   virtual ~TomoyoAfterDT00DLL();
 
   // Overridden from RealLiveDLL:

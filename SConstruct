@@ -83,6 +83,8 @@ else:
       "boost_date_time",
       "boost_thread",
       "boost_system"])
+env.Append(LIBS=["dl"])
+
 
 if GetOption("fullstatic"):
   env["FULL_STATIC_BUILD"] = True
